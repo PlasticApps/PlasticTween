@@ -11,7 +11,7 @@ Works with Entity(as relationship) and GameObjects, also has 12 eases(Linear, Le
 _Callbacks_
 
 ````
-Tween.Delay(1.0f, () => { // do things })`
+Tween.Delay(1.0f, () => { // do things })
 Tween.MoveEntity(...).OnTweenComplete(() => {});
 ````
 
