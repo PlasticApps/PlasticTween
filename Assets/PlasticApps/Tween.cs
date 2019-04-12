@@ -199,6 +199,44 @@ namespace PlasticApps
             return entity;
         }
 
+        public static Entity RotateGameObject(
+            GameObject go,
+            float time,
+            Vector3 to, Vector3 from,
+            EaseType easeType = EaseType.linear,
+            int loop = -1, bool pingPong = false,
+            int tagId = 0)
+        {
+            float3 from3 = new float3(from.x, from.y, from.z);
+            float3 to3 = new float3(to.x, to.y, to.z);
+
+            var entityManager = World.Active.EntityManager;
+            var entity = GameObjectEntity.AddToEntityManager(entityManager, go);
+            entityManager.AddComponentData(entity, new Translation {Value = from3});
+            entityManager.AddComponentData(entity, new TweenGameObject());
+            RotateEntity(entity, time, to3, from3, easeType, loop, pingPong, tagId);
+            return entity;
+        }
+        
+        public static Entity ScaleGameObject(
+            GameObject go,
+            float time,
+            Vector3 to, Vector3 from,
+            EaseType easeType = EaseType.linear,
+            int loop = -1, bool pingPong = false,
+            int tagId = 0)
+        {
+            float3 from3 = new float3(from.x, from.y, from.z);
+            float3 to3 = new float3(to.x, to.y, to.z);
+
+            var entityManager = World.Active.EntityManager;
+            var entity = GameObjectEntity.AddToEntityManager(entityManager, go);
+            entityManager.AddComponentData(entity, new Translation {Value = from3});
+            entityManager.AddComponentData(entity, new TweenGameObject());
+            ScaleEntity(entity, time, to3, from3, easeType, loop, pingPong, tagId);
+            return entity;
+        }
+        
         static Entity InstantiateTweenSource(Entity entitySource, float time, EaseType easeType, int loop,
             byte pingPong,
             int tagId)
