@@ -53,5 +53,6 @@ Tween.StopByTag(int tagId);
 Tween.StopAll();
 ````
 
-_Same projects_
+_Similar projects:_
+
 ECS-Tween - https://github.com/Xerios/ECS-Tween
