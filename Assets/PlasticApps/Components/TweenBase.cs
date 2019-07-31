@@ -1,5 +1,4 @@
-﻿using PlasticApps.Components.Ease;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 namespace PlasticApps.Components
 {

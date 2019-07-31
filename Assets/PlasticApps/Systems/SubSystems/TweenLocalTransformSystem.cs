@@ -12,16 +12,16 @@ namespace PlasticApps.Systems.SubSystems
 {
     [UpdateInGroup(typeof(TweenSystems))]
     [UpdateAfter(typeof(TweenValuesSystems))]
-    public class TweenTransformSystem : JobComponentSystem
+    public class TweenLocalTransformSystem : JobComponentSystem
     {
-//        [BurstCompile]
+        //[BurstCompile]
         struct ApplyTranslationJob : IJobParallelForTransform
         {
             [DeallocateOnJobCompletion] [ReadOnly] public NativeArray<Translation> positions;
 
             public void Execute(int index, TransformAccess transform)
             {
-                transform.position = positions[index].Value;
+                transform.localPosition = positions[index].Value;
             }
         }
 
@@ -31,7 +31,7 @@ namespace PlasticApps.Systems.SubSystems
 
             public void Execute(int index, TransformAccess transform)
             {
-                transform.rotation = rotations[index].Value;
+                transform.localRotation = rotations[index].Value;
             }
         }
 
@@ -42,12 +42,12 @@ namespace PlasticApps.Systems.SubSystems
         {
             m_TranslateGroup =
                 GetEntityQuery(ComponentType.ReadOnly(typeof(TweenBase)),
-                    ComponentType.ReadOnly(typeof(TweenGameObject)), ComponentType.ReadOnly(typeof(Translation)),
+                    ComponentType.ReadOnly(typeof(TweenGameObjectLocal)), ComponentType.ReadOnly(typeof(Translation)),
                     ComponentType.ReadWrite<Transform>());
 
             m_RotateGroup =
                 GetEntityQuery(ComponentType.ReadOnly(typeof(TweenBase)),
-                    ComponentType.ReadOnly(typeof(TweenGameObject)), ComponentType.ReadOnly(typeof(Rotation)),
+                    ComponentType.ReadOnly(typeof(TweenGameObjectLocal)), ComponentType.ReadOnly(typeof(Rotation)),
                     ComponentType.ReadWrite<Transform>());
         }
 
@@ -55,7 +55,7 @@ namespace PlasticApps.Systems.SubSystems
         {
             int translationLength = m_TranslateGroup.CalculateLength();
             int rotationLength = m_RotateGroup.CalculateLength();
-            if (translationLength == 0 && rotationLength==0) return inputDeps;
+            if (translationLength == 0 && rotationLength == 0) return inputDeps;
 
             var translateTransforms = m_TranslateGroup.GetTransformAccessArray();
             var positions = m_TranslateGroup.ToComponentDataArray<Translation>(Allocator.TempJob);

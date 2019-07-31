@@ -1,12 +1,12 @@
 ﻿//#define TWEEN_AS_COMPONENT
 
-using Unity.Entities;
-using UnityEngine;
 using PlasticApps.Components;
 using PlasticApps.Components.Ease;
 using PlasticApps.Systems;
+using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
 
 
 namespace PlasticApps
@@ -174,7 +174,7 @@ namespace PlasticApps
         }
 
         public static Entity MoveGameObject(
-            GameObject go, float time, Vector3 to, EaseType easeType, int loop = -1, bool pingPong = false)
+            GameObject go, float time, Vector3 to, EaseType easeType, int loop = 0, bool pingPong = false)
         {
             return MoveGameObject(go, time, to, go.transform.position, easeType, loop, pingPong);
         }
@@ -185,7 +185,7 @@ namespace PlasticApps
             float time,
             Vector3 to, Vector3 from,
             EaseType easeType = EaseType.linear,
-            int loop = -1, bool pingPong = false,
+            int loop = 0, bool pingPong = false,
             int tagId = 0)
         {
             float3 from3 = new float3(from.x, from.y, from.z);
@@ -199,12 +199,12 @@ namespace PlasticApps
             return entity;
         }
 
-        public static Entity RotateGameObject(
+        public static Entity MoveGameObjectLocal(
             GameObject go,
             float time,
             Vector3 to, Vector3 from,
             EaseType easeType = EaseType.linear,
-            int loop = -1, bool pingPong = false,
+            int loop = 0, bool pingPong = false,
             int tagId = 0)
         {
             float3 from3 = new float3(from.x, from.y, from.z);
@@ -212,18 +212,73 @@ namespace PlasticApps
 
             var entityManager = World.Active.EntityManager;
             var entity = GameObjectEntity.AddToEntityManager(entityManager, go);
-            entityManager.AddComponentData(entity, new Translation {Value = from3});
-            entityManager.AddComponentData(entity, new TweenGameObject());
-            RotateEntity(entity, time, to3, from3, easeType, loop, pingPong, tagId);
+            entityManager.AddComponentData(entity, new Translation { Value = from3 });
+            entityManager.AddComponentData(entity, new TweenGameObjectLocal());
+            Debug.Log("Entity: " + entity.Index);
+            MoveEntity(entity, time, to3, from3, easeType, loop, pingPong, tagId);
             return entity;
         }
         
+        public static Entity RotateGameObject(
+            GameObject go,
+            float time,
+            Quaternion to, Quaternion from,
+            EaseType easeType = EaseType.linear,
+            int loop = 0, bool pingPong = false,
+            int tagId = 0)
+        {
+            quaternion fromq = new quaternion(from.x, from.y, from.z, from.w);
+            quaternion toq = new quaternion(to.x, to.y, to.z, to.w);
+
+            var entityManager = World.Active.EntityManager;
+            var entity = GameObjectEntity.AddToEntityManager(entityManager, go);
+            entityManager.AddComponentData(entity, new Rotation {Value = fromq});
+            entityManager.AddComponentData(entity, new TweenGameObject());
+            RotateEntity(entity, time, toq, fromq, easeType, loop, pingPong, tagId);
+            return entity;
+        }
+
+        public static Entity RotateGameObjectLocal(
+            GameObject go,
+            float time,
+            Quaternion to, Quaternion from,
+            EaseType easeType = EaseType.linear,
+            int loop = 0, bool pingPong = false,
+            int tagId = 0)
+        {
+            return RotateGameObjectLocal(
+                go,
+                time,
+                new quaternion(to.x, to.y, to.z, to.w),
+                new quaternion(from.x, from.y, from.z, from.w),
+                easeType,
+                loop, pingPong,
+                tagId);
+        }
+
+        public static Entity RotateGameObjectLocal(
+            GameObject go,
+            float time,
+            quaternion to, quaternion from,
+            EaseType easeType = EaseType.linear,
+            int loop = 0, bool pingPong = false,
+            int tagId = 0)
+        {
+            var entityManager = World.Active.EntityManager;
+            var entity = GameObjectEntity.AddToEntityManager(entityManager, go);
+            Debug.Log("Entity: "+entity.Index);
+            entityManager.AddComponentData(entity, new Rotation { Value = from });
+            entityManager.AddComponentData(entity, new TweenGameObjectLocal());
+            RotateEntity(entity, time, to, from, easeType, loop, pingPong, tagId);
+            return entity;
+        }
+
         public static Entity ScaleGameObject(
             GameObject go,
             float time,
             Vector3 to, Vector3 from,
             EaseType easeType = EaseType.linear,
-            int loop = -1, bool pingPong = false,
+            int loop = 0, bool pingPong = false,
             int tagId = 0)
         {
             float3 from3 = new float3(from.x, from.y, from.z);
@@ -247,10 +302,15 @@ namespace PlasticApps
 #if TWEEN_AS_COMPONENT
             entity = entitySource;
 #else
-            if (entityManager.HasComponent(entitySource, typeof(TweenGameObject)))
+            if (entityManager.HasComponent(entitySource, typeof(TweenGameObject))
+            || entityManager.HasComponent(entitySource, typeof(TweenGameObjectLocal)))
+            {
                 entity = entitySource;
+            }
             else
+            {
                 entity = entityManager.CreateEntity();
+            }
 #endif
 
             if (!entityManager.HasComponent(entity, typeof(TweenBase)))
@@ -281,7 +341,7 @@ namespace PlasticApps
             float time,
             float3 to3, float3 from3,
             EaseType easeType = EaseType.linear,
-            int loop = -1, bool pingPong = false,
+            int loop = 0, bool pingPong = false,
             int tagId = 0, bool self = false)
         {
             var entityManager = World.Active.EntityManager;
@@ -295,15 +355,32 @@ namespace PlasticApps
         public static Entity RotateEntity(
             Entity entitySource,
             float time,
-            float3 to3, float3 from3,
+            float3 to, float3 from,
             EaseType easeType = EaseType.linear,
-            int loop = -1, bool pingPong = false,
+            int loop = 0, bool pingPong = false,
+            int tagId = 0, bool self = false)
+        {
+            return RotateEntity(
+                entitySource,
+                time,
+                quaternion.Euler(to.xyz), quaternion.Euler(from.xyz),
+                easeType,
+                loop, pingPong,
+                tagId, self);
+        }
+
+        public static Entity RotateEntity(
+            Entity entitySource,
+            float time,
+            quaternion to, quaternion from,
+            EaseType easeType = EaseType.linear,
+            int loop = 0, bool pingPong = false,
             int tagId = 0, bool self = false)
         {
             var entityManager = World.Active.EntityManager;
             var entity = InstantiateTweenSource(entitySource, time, easeType, loop, (byte) (pingPong ? 1 : 0), tagId);
             if (!entityManager.HasComponent(entity, typeof(TweenRotate)))
-                entityManager.AddComponentData(entity, new TweenRotate {From = from3, To = to3});
+                entityManager.AddComponentData(entity, new TweenRotate {From = from, To = to});
 
             return entity;
         }
@@ -313,7 +390,7 @@ namespace PlasticApps
             float time,
             float3 to3, float3 from3,
             EaseType easeType = EaseType.linear,
-            int loop = -1, bool pingPong = false,
+            int loop = 0, bool pingPong = false,
             int tagId = 0, bool self = false)
         {
             var entityManager = World.Active.EntityManager;
