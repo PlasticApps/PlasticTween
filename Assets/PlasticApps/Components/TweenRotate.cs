@@ -5,7 +5,7 @@ namespace PlasticApps.Components
 {
     public struct TweenRotate : IComponentData
     {
-        public float3 From;
-        public float3 To;
+        public quaternion From;
+        public quaternion To;
     }
 }

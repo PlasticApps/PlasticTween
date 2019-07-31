@@ -1,5 +1,5 @@
-﻿using PlasticApps.Systems.Groups;
-using PlasticApps.Components;
+﻿using PlasticApps.Components;
+using PlasticApps.Systems.Groups;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
@@ -14,16 +14,16 @@ namespace PlasticApps.Systems
         [ExcludeComponent(typeof(TweenPaused), typeof(TweenComplete))]
         struct TweenValueJob : IJobForEach<TweenBase, TweenRotate, TweenEntity>
         {
-            [NativeDisableParallelForRestriction] public ComponentDataFromEntity<RotationEulerXYZ> Rotations;
+            [NativeDisableParallelForRestriction] public ComponentDataFromEntity<Rotation> Rotations;
 
             public void Execute([ReadOnly] ref TweenBase tween, [ReadOnly] ref TweenRotate rotate,
                 [ReadOnly] ref TweenEntity entity)
             {
                 if (Rotations.Exists(entity.Value))
                 {
-                    Rotations[entity.Value] = new RotationEulerXYZ
+                    Rotations[entity.Value] = new Rotation
                     {
-                        Value = math.lerp(rotate.From, rotate.To, tween.Value)
+                        Value = math.slerp(rotate.From, rotate.To, tween.Value)
                     };
                 }
             }
@@ -33,7 +33,7 @@ namespace PlasticApps.Systems
         {
             return new TweenValueJob
             {
-                Rotations = GetComponentDataFromEntity<RotationEulerXYZ>()
+                Rotations = GetComponentDataFromEntity<Rotation>()
             }.Schedule(this, inputDeps);
         }
     }
